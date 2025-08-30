@@ -1,15 +1,5 @@
-# Create ready-to-upload files for your GitHub Pages site.
-# We'll save:
-# 1) /mnt/data/polyglot-basics/index.html (the full site)
-# 2) /mnt/data/polyglot-basics/audio/README.txt (placeholder for your mp3s)
-# 3) /mnt/data/polyglot-basics.zip (a zipped copy for convenience)
-import os, textwrap, zipfile, pathlib
+<!DOCTYPE html>
 
-base = "/mnt/data/polyglot-basics"
-audio_dir = os.path.join(base, "audio")
-os.makedirs(audio_dir, exist_ok=True)
-
-index_html = """<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -147,23 +137,6 @@ document.getElementById('viewStats').onclick=showStats;
 
 renderTopics();renderCard();
 </script>
+
 </body>
 </html>
-"""
-
-with open(os.path.join(base, "index.html"), "w", encoding="utf-8") as f:
-    f.write(index_html)
-
-with open(os.path.join(audio_dir, "README.txt"), "w", encoding="utf-8") as f:
-    f.write("Put your MP3 files here if you want native recordings. Example: hallo.mp3\nThen modify playAudio() to use the file instead of TTS.\n")
-
-# Zip the folder
-zip_path = "/mnt/data/polyglot-basics.zip"
-with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
-    for p in pathlib.Path(base).rglob("*"):
-        z.write(str(p), arcname=str(p.relative_to("/mnt/data")))
-
-print("Created files:")
-print(" - /mnt/data/polyglot-basics/index.html")
-print(" - /mnt/data/polyglot-basics/audio/README.txt")
-print(" - /mnt/data/polyglot-basics.zip")
