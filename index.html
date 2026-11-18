@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AppGlot — Interactive Polyglot Vocabulary & Language Learning</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d1a;
+      --card: #111a36;
+      --card-border: #1e2c5a;
+      --ink: #f0f4ff;
+      --muted: #8fa0cf;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --ok: #10b981;
+      --bad: #ef4444;
+      --amber: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background: radial-gradient(1200px 800px at 50% -10%, #172554 0%, #090d1a 60%, #040711 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 36px 20px 16px;
+      text-align: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #93c5fd;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    header h1 {
+      font-size: clamp(26px, 4vw, 40px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 40%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    header p {
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    main {
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px 20px 48px;
+      flex: 1;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto auto;
+      gap: 12px;
+      align-items: end;
+      margin: 20px 0;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+    select, .btn {
+      padding: 11px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      background: #0d1530;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      outline: none;
+    }
+    select:focus, .btn:hover {
+      border-color: var(--accent);
+      background: #121c40;
+    }
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    /* Flashcard */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 32px 28px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+      transition: transform 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .lang-pill {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    .card-index {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .face {
+      text-align: center;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 12px 0 28px;
+      min-height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .translations {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      margin-top: 16px;
+      transition: opacity 0.2s ease;
+    }
+    .t-item {
+      background: #0a1126;
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .t-item b {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    .t-item span {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* Actions Bar */
+    .actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--card-border);
+      background: #0d1530;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .pill:hover {
+      background: #142048;
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .pill-success:hover {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: var(--ok);
+      color: var(--ok);
+    }
+    .pill-danger:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: var(--bad);
+      color: var(--bad);
+    }
+
+    /* Quiz Panel */
+    .quiz-panel {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 32px 28px;
+      margin-top: 16px;
+      display: none;
+    }
+    .quiz-question {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 16px 0 24px;
+    }
+    .quiz-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .quiz-opt {
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+      background: #0b1228;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .quiz-opt:hover {
+      border-color: var(--accent);
+      background: #101c40;
+    }
+    .quiz-opt.correct {
+      background: rgba(16, 185, 129, 0.2) !important;
+      border-color: var(--ok) !important;
+      color: var(--ok) !important;
+    }
+    .quiz-opt.wrong {
+      background: rgba(239, 68, 68, 0.2) !important;
+      border-color: var(--bad) !important;
+      color: var(--bad) !important;
+    }
+    .quiz-score-hud {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--muted);
+      border-top: 1px solid var(--card-border);
+      padding-top: 16px;
+    }
+
+    /* Stats Dashboard */
+    .stats {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 28px;
+      margin-top: 16px;
+      display: none;
+    }
+    .stats h2 { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 14px;
+    }
+    .bar {
+      height: 8px;
+      border-radius: 999px;
+      background: #1c274c;
+      overflow: hidden;
+      width: 140px;
+    }
+    .bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px 20px 36px;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    footer kbd {
+      background: #141e3d;
+      border: 1px solid var(--card-border);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #cbd5e1;
+    }
+
+    @media (max-width: 640px) {
+      .controls { grid-template-columns: 1fr; }
+      .quiz-options { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">🌐 Polyglot Language Studio</div>
+  <h1>AppGlot</h1>
+  <p>Learn core vocabulary across English, German, French & Spanish with native speech audio.</p>
+</header>
+
+<main>
+  <!-- Controls Bar -->
+  <div class="controls">
+    <label>Target Language
+      <select id="langSelect">
+        <option value="de">German (Deutsch)</option>
+        <option value="fr">French (Français)</option>
+        <option value="es">Spanish (Español)</option>
+        <option value="en">English</option>
+      </select>
+    </label>
+
+    <label>Category
+      <select id="topicSelect"></select>
+    </label>
+
+    <button id="toggleQuizBtn" class="btn btn-primary">🎯 Quiz Mode</button>
+    <button id="toggleStatsBtn" class="btn">📊 Stats</button>
+  </div>
+
+  <!-- Flashcard View -->
+  <section class="card" id="cardView">
+    <div class="card-top">
+      <span class="lang-pill" id="targetLangLabel">German</span>
+      <span class="card-index">Card <span id="cardIndex">1</span> of <span id="cardTotal">10</span></span>
+    </div>
+
+    <div class="face" id="front">Hallo</div>
+
+    <div class="translations" id="translations"></div>
+
+    <div class="actions">
+      <button class="pill" id="prevBtn">◀ Prev</button>
+      <button class="pill" id="flipBtn">🔄 Flip / Hide</button>
+      <button class="pill" id="nextBtn">Next ▶</button>
+      <button class="pill" id="speakBtn">🔊 Pronounce</button>
+      <button class="pill pill-success" id="gotItBtn">✅ Mastered</button>
+      <button class="pill pill-danger" id="reviewBtn">❌ Review</button>
+    </div>
+  </section>
+
+  <!-- Interactive Quiz Panel -->
+  <section class="quiz-panel" id="quizView">
+    <div class="card-top">
+      <span class="lang-pill">Quiz Challenge</span>
+      <button id="exitQuizBtn" class="pill">Exit Quiz ✕</button>
+    </div>
+
+    <p style="text-align: center; color: var(--muted); font-size: 13px;">What is the translation for:</p>
+    <div class="quiz-question" id="quizQuestionWord">"Hello"</div>
+
+    <div class="quiz-options" id="quizOptionsContainer"></div>
+
+    <div class="quiz-score-hud">
+      <span>Score: <b id="quizScoreText" style="color: var(--ok);">0</b> / <span id="quizTotalQuestions">0</span></span>
+      <span id="quizFeedbackText">Select the correct answer</span>
+    </div>
+  </section>
+
+  <!-- Stats Dashboard Panel -->
+  <section class="stats" id="statsView">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h2>Learning Progress Dashboard</h2>
+      <button id="closeStatsBtn" class="pill">Close ✕</button>
+    </div>
+    <div id="statsContent"></div>
+  </section>
+</main>
+
+<footer>
+  Hotkeys: <kbd>Space</kbd> = Flip Translations • <kbd>←</kbd> / <kbd>→</kbd> = Navigate • <kbd>S</kbd> = Pronounce • <kbd>Q</kbd> = Quiz Mode
+</footer>
+
+<script>
+const VOCABULARY = {
+  greetings: {
+    label: "Greetings & Essentials",
+    items: [
+      { en: "Hello", de: "Hallo", fr: "Bonjour", es: "Hola" },
+      { en: "Good morning", de: "Guten Morgen", fr: "Bonjour", es: "Buenos días" },
+      { en: "Good evening", de: "Guten Abend", fr: "Bonsoir", es: "Buenas tardes" },
+      { en: "Goodbye", de: "Auf Wiedersehen", fr: "Au revoir", es: "Adiós" },
+      { en: "Please", de: "Bitte", fr: "S'il vous plaît", es: "Por favor" },
+      { en: "Thank you", de: "Danke", fr: "Merci", es: "Gracias" },
+      { en: "You're welcome", de: "Gern geschehen", fr: "De rien", es: "De nada" },
+      { en: "Yes", de: "Ja", fr: "Oui", es: "Sí" },
+      { en: "No", de: "Nein", fr: "Non", es: "No" },
+      { en: "How are you?", de: "Wie geht es Ihnen?", fr: "Comment allez-vous?", es: "¿Cómo estás?" }
+    ]
+  },
+  numbers: {
+    label: "Numbers & Counting",
+    items: [
+      { en: "One", de: "Eins", fr: "Un", es: "Uno" },
+      { en: "Two", de: "Zwei", fr: "Deux", es: "Dos" },
+      { en: "Three", de: "Drei", fr: "Trois", es: "Tres" },
+      { en: "Four", de: "Vier", fr: "Quatre", es: "Cuatro" },
+      { en: "Five", de: "Fünf", fr: "Cinq", es: "Cinco" },
+      { en: "Six", de: "Sechs", fr: "Six", es: "Seis" },
+      { en: "Seven", de: "Sieben", fr: "Sept", es: "Siete" },
+      { en: "Eight", de: "Acht", fr: "Huit", es: "Ocho" },
+      { en: "Nine", de: "Neun", fr: "Neuf", es: "Nueve" },
+      { en: "Ten", de: "Zehn", fr: "Dix", es: "Diez" }
+    ]
+  },
+  dining: {
+    label: "Food & Dining",
+    items: [
+      { en: "Water", de: "Wasser", fr: "Eau", es: "Agua" },
+      { en: "Bread", de: "Brot", fr: "Pain", es: "Pan" },
+      { en: "Coffee", de: "Kaffee", fr: "Café", es: "Café" },
+      { en: "Tea", de: "Tee", fr: "Thé", es: "Té" },
+      { en: "Delicious", de: "Lecker", fr: "Délicieux", es: "Delicioso" },
+      { en: "The bill, please", de: "Die Rechnung, bitte", fr: "L'addition, s'il vous plaît", es: "La cuenta, por favor" }
+    ]
+  },
+  travel: {
+    label: "Travel & Directions",
+    items: [
+      { en: "Where is...?", de: "Wo ist...?", fr: "Où est...?", es: "¿Dónde está...?" },
+      { en: "Train station", de: "Bahnhof", fr: "Gare", es: "Estación de tren" },
+      { en: "Airport", de: "Flughafen", fr: "Aéroport", es: "Aeropuerto" },
+      { en: "Hotel", de: "Hotel", fr: "Hôtel", es: "Hotel" },
+      { en: "Left", de: "Links", fr: "Gauche", es: "Izquierda" },
+      { en: "Right", de: "Rechts", fr: "Droite", es: "Derecha" }
+    ]
+  },
+  verbs: {
+    label: "Essential Verbs",
+    items: [
+      { en: "To be", de: "Sein", fr: "Être", es: "Ser / Estar" },
+      { en: "To have", de: "Haben", fr: "Avoir", es: "Tener / Haber" },
+      { en: "To speak", de: "Sprechen", fr: "Parler", es: "Hablar" },
+      { en: "To understand", de: "Verstehen", fr: "Comprendre", es: "Entender" },
+      { en: "To want", de: "Wollen", fr: "Vouloir", es: "Querer" }
+    ]
+  }
+};
+
+const LANG_CONFIG = {
+  en: { name: "English", code: "en-US" },
+  de: { name: "German", code: "de-DE" },
+  fr: { name: "French", code: "fr-FR" },
+  es: { name: "Spanish", code: "es-ES" }
+};
+
+let state = {
+  targetLang: 'de',
+  topic: 'greetings',
+  index: 0,
+  showTranslations: true,
+  quizMode: false,
+  quizScore: 0,
+  quizTotal: 0
+};
+
+// DOM References
+const langSelect = document.getElementById('langSelect');
+const topicSelect = document.getElementById('topicSelect');
+const targetLangLabel = document.getElementById('targetLangLabel');
+const cardIndex = document.getElementById('cardIndex');
+const cardTotal = document.getElementById('cardTotal');
+const front = document.getElementById('front');
+const translations = document.getElementById('translations');
+
+const cardView = document.getElementById('cardView');
+const quizView = document.getElementById('quizView');
+const statsView = document.getElementById('statsView');
+
+// Populate categories dropdown
+function initTopics() {
+  topicSelect.innerHTML = '';
+  Object.keys(VOCABULARY).forEach(key => {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = VOCABULARY[key].label;
+    topicSelect.appendChild(opt);
+  });
+  topicSelect.value = state.topic;
+}
+
+function getItems() {
+  return VOCABULARY[state.topic].items;
+}
+
+function renderCard() {
+  const items = getItems();
+  const item = items[state.index];
+
+  targetLangLabel.textContent = LANG_CONFIG[state.targetLang].name;
+  cardIndex.textContent = state.index + 1;
+  cardTotal.textContent = items.length;
+
+  front.textContent = item[state.targetLang];
+
+  translations.innerHTML = '';
+  ['en', 'de', 'fr', 'es'].forEach(lang => {
+    const div = document.createElement('div');
+    div.className = 't-item';
+    div.innerHTML = `<b>${LANG_CONFIG[lang].name}</b><span>${item[lang]}</span>`;
+    translations.appendChild(div);
+  });
+
+  translations.style.display = state.showTranslations ? 'grid' : 'none';
+
+  // Record practice in stats
+  recordStudy();
+}
+
+function navigateCard(delta) {
+  const items = getItems();
+  state.index = (state.index + delta + items.length) % items.length;
+  renderCard();
+}
+
+// Text-to-Speech Pronunciation
+function speakCurrent() {
+  const item = getItems()[state.index];
+  const text = item[state.targetLang];
+  const langCode = LANG_CONFIG[state.targetLang].code;
+
+  if (!('speechSynthesis' in window)) {
+    alert("Speech Synthesis not supported in this browser.");
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = langCode;
+  utter.rate = 0.9;
+  window.speechSynthesis.speak(utter);
+}
+
+// Stats tracking via localStorage
+function getStats() {
+  return JSON.parse(localStorage.getItem('appglot_stats') || '{"studied":{}, "mastered":0, "review":0}');
+}
+
+function saveStats(s) {
+  localStorage.setItem('appglot_stats', JSON.stringify(s));
+}
+
+function recordStudy() {
+  const s = getStats();
+  const key = `${state.topic}_${state.targetLang}`;
+  s.studied[key] = (s.studied[key] || 0) + 1;
+  saveStats(s);
+}
+
+function markMastered() {
+  const s = getStats();
+  s.mastered += 1;
+  saveStats(s);
+  navigateCard(1);
+}
+
+function markReview() {
+  const s = getStats();
+  s.review += 1;
+  saveStats(s);
+  navigateCard(1);
+}
+
+function renderStats() {
+  const s = getStats();
+  const container = document.getElementById('statsContent');
+  let html = `
+    <div class="stat-row">
+      <span>Total Flashcards Mastered:</span>
+      <b style="color: var(--ok);">${s.mastered}</b>
+    </div>
+    <div class="stat-row">
+      <span>Marked for Review:</span>
+      <b style="color: var(--bad);">${s.review}</b>
+    </div>
+    <h3 style="margin: 20px 0 10px; font-size: 15px; color: var(--muted);">Category Engagement</h3>
+  `;
+
+  Object.keys(s.studied).forEach(key => {
+    const count = s.studied[key];
+    const pct = Math.min(100, count * 5);
+    html += `
+      <div class="stat-row">
+        <span>${key.replace('_', ' — ')}:</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span>${count} views</span>
+          <div class="bar"><div class="bar-fill" style="width: ${pct}%"></div></div>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+  statsView.style.display = 'block';
+  cardView.style.display = 'none';
+  quizView.style.display = 'none';
+}
+
+// Interactive Quiz Engine
+function startQuiz() {
+  state.quizMode = true;
+  state.quizScore = 0;
+  state.quizTotal = 0;
+
+  cardView.style.display = 'none';
+  statsView.style.display = 'none';
+  quizView.style.display = 'block';
+
+  renderNextQuizQuestion();
+}
+
+function renderNextQuizQuestion() {
+  const items = getItems();
+  const targetItem = items[Math.floor(Math.random() * items.length)];
+
+  // Options: 1 correct + 3 random distractors
+  const distractors = items
+    .filter(it => it.en !== targetItem.en)
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 3);
+
+  const allOpts = [targetItem, ...distractors].sort(() => 0.5 - Math.random());
+
+  document.getElementById('quizQuestionWord').textContent = `"${targetItem.en}"`;
+  document.getElementById('quizFeedbackText').textContent = "Pick the matching translation:";
+  document.getElementById('quizScoreText').textContent = state.quizScore;
+  document.getElementById('quizTotalQuestions').textContent = state.quizTotal;
+
+  const optContainer = document.getElementById('quizOptionsContainer');
+  optContainer.innerHTML = '';
+
+  allOpts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-opt';
+    btn.textContent = opt[state.targetLang];
+
+    btn.onclick = () => {
+      // Disable options after click
+      Array.from(optContainer.children).forEach(c => c.style.pointerEvents = 'none');
+      state.quizTotal++;
+
+      if (opt.en === targetItem.en) {
+        btn.classList.add('correct');
+        state.quizScore++;
+        document.getElementById('quizFeedbackText').textContent = "🎉 Correct!";
+      } else {
+        btn.classList.add('wrong');
+        document.getElementById('quizFeedbackText').textContent = `❌ Correct was: "${targetItem[state.targetLang]}"`;
+      }
+
+      document.getElementById('quizScoreText').textContent = state.quizScore;
+      document.getElementById('quizTotalQuestions').textContent = state.quizTotal;
+
+      setTimeout(() => {
+        renderNextQuizQuestion();
+      }, 1400);
+    };
+
+    optContainer.appendChild(btn);
+  });
+}
+
+function exitQuiz() {
+  state.quizMode = false;
+  quizView.style.display = 'none';
+  cardView.style.display = 'block';
+}
+
+// Event Listeners
+langSelect.onchange = (e) => {
+  state.targetLang = e.target.value;
+  renderCard();
+};
+
+topicSelect.onchange = (e) => {
+  state.topic = e.target.value;
+  state.index = 0;
+  renderCard();
+};
+
+document.getElementById('prevBtn').onclick = () => navigateCard(-1);
+document.getElementById('nextBtn').onclick = () => navigateCard(1);
+document.getElementById('flipBtn').onclick = () => {
+  state.showTranslations = !state.showTranslations;
+  translations.style.display = state.showTranslations ? 'grid' : 'none';
+};
+document.getElementById('speakBtn').onclick = speakCurrent;
+document.getElementById('gotItBtn').onclick = markMastered;
+document.getElementById('reviewBtn').onclick = markReview;
+
+document.getElementById('toggleQuizBtn').onclick = startQuiz;
+document.getElementById('exitQuizBtn').onclick = exitQuiz;
+
+document.getElementById('toggleStatsBtn').onclick = renderStats;
+document.getElementById('closeStatsBtn').onclick = () => {
+  statsView.style.display = 'none';
+  cardView.style.display = 'block';
+};
+
+// Keyboard Shortcuts
+window.addEventListener('keydown', (e) => {
+  if (state.quizMode) return;
+  if (e.code === 'Space') {
+    e.preventDefault();
+    document.getElementById('flipBtn').click();
+  } else if (e.code === 'ArrowLeft') {
+    navigateCard(-1);
+  } else if (e.code === 'ArrowRight') {
+    navigateCard(1);
+  } else if (e.key.toLowerCase() === 's') {
+    speakCurrent();
+  } else if (e.key.toLowerCase() === 'q') {
+    startQuiz();
+  }
+});
+
+// Init
+initTopics();
+renderCard();
+</script>
+
+</body>
+</html>
